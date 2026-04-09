@@ -58,6 +58,7 @@ export type MockExamQuestion = {
   questionImagePath: string | null;
   options: MockExamOption[];
   correctOption: string;
+  answerExplanation: string | null;
   subjectCategory: string;
   subjectTopic: string;
 };
@@ -86,6 +87,18 @@ export type CategoryBreakdown = {
   topics: TopicBreakdown[];
 };
 
+export type WrongQuestionReview = {
+  id: string;
+  questionNumber: string;
+  subjectTopic: string;
+  questionText: string;
+  selectedOption: string | null;
+  selectedOptionText: string | null;
+  correctOption: string;
+  correctOptionText: string | null;
+  answerExplanation: string | null;
+};
+
 export type MockExamResult = {
   completedAtMs: number;
   settings: MockExamSettings;
@@ -97,6 +110,7 @@ export type MockExamResult = {
   selectedCategories: string[];
   selectedTopicCount: number;
   categoryBreakdown: CategoryBreakdown[];
+  wrongQuestions: WrongQuestionReview[];
 };
 
 const SESSION_STORAGE_KEY = "ofa.mockExam.currentSession";
@@ -182,6 +196,7 @@ export const computeMockExamResult = (
   const totalQuestions = session.questions.length;
 
   let correctAnswers = 0;
+  const wrongQuestions: WrongQuestionReview[] = [];
 
   const categoryStats = new Map<
     string,
@@ -196,6 +211,23 @@ export const computeMockExamResult = (
   for (const question of session.questions) {
     const selectedAnswer = answers[question.id];
     const isCorrect = selectedAnswer === question.correctOption;
+
+    if (!isCorrect) {
+      const selectedChoice = question.options.find((choice) => choice.key === selectedAnswer);
+      const correctChoice = question.options.find((choice) => choice.key === question.correctOption);
+
+      wrongQuestions.push({
+        id: question.id,
+        questionNumber: question.questionNumber,
+        subjectTopic: question.subjectTopic,
+        questionText: question.questionText,
+        selectedOption: selectedAnswer ?? null,
+        selectedOptionText: selectedChoice?.text?.trim() ? selectedChoice.text : null,
+        correctOption: question.correctOption,
+        correctOptionText: correctChoice?.text?.trim() ? correctChoice.text : null,
+        answerExplanation: question.answerExplanation,
+      });
+    }
 
     if (isCorrect) {
       correctAnswers += 1;
@@ -273,5 +305,6 @@ export const computeMockExamResult = (
     selectedCategories: deriveSelectedCategories(session.settings.selectedTopics),
     selectedTopicCount: session.settings.selectedTopics.length,
     categoryBreakdown,
+    wrongQuestions,
   };
 };

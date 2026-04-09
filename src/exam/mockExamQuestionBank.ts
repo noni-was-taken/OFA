@@ -15,8 +15,10 @@ type ParsedVaultQuestion = {
   questionText: string;
   optionLines: string[];
   correctOption: string;
+  answerExplanation: string | null;
   subjectTopic: string;
   questionImagePath: string | null;
+  containsMarkdownTable: boolean;
 };
 
 const isString = (value: unknown): value is string => typeof value === "string";
@@ -41,6 +43,11 @@ const stripInlineMarkdown = (text: string): string =>
     .trim();
 
 const normalizeSpaces = (text: string): string => text.replace(/\s+/g, " ").trim();
+
+const isVaultCommentLine = (line: string): boolean => {
+  const trimmed = line.trim();
+  return /^%%.*%%$/.test(trimmed) || trimmed === "%%";
+};
 
 const deriveCategoryFromTopic = (topic: string): CategoryName | "Uncategorized" => {
   const foundCategory = (Object.keys(categoryTopics) as CategoryName[]).find((categoryName) =>
@@ -159,6 +166,51 @@ const parseCorrectOption = (rawAnswerLine: string): string | null => {
   return null;
 };
 
+const extractExplanationText = (linesAfterAnswer: string[]): string | null => {
+  const explanationLines: string[] = [];
+
+  for (const rawLine of linesAfterAnswer) {
+    const trimmed = rawLine.trim();
+
+    if (!trimmed) {
+      if (explanationLines.length > 0 && explanationLines[explanationLines.length - 1] !== "") {
+        explanationLines.push("");
+      }
+      continue;
+    }
+
+    if (isVaultCommentLine(trimmed) || /^---+$/.test(trimmed) || /^#\s*References\b/i.test(trimmed)) {
+      break;
+    }
+
+    if (/^!\[\[/.test(trimmed)) {
+      continue;
+    }
+
+    const cleaned = normalizeLegacySymbols(stripInlineMarkdown(trimmed)).replace(/^#{1,6}\s*/, "").trim();
+    if (cleaned) {
+      explanationLines.push(cleaned);
+    }
+  }
+
+  const explanation = explanationLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return explanation || null;
+};
+
+const requiresVisualContent = (
+  questionText: string,
+  optionLines: string[],
+  questionImagePath: string | null,
+  containsMarkdownTable: boolean,
+): boolean => {
+  if (questionImagePath || containsMarkdownTable) {
+    return true;
+  }
+
+  const combined = `${questionText}\n${optionLines.join("\n")}`;
+  return /\b(table|figure|diagram|graph|chart|flowchart|shown below|as shown|refer to the (?:following )?(?:figure|table)|legend|in the figure|in the table|see figure|see table)\b/i.test(combined);
+};
+
 const toQuestionImagePath = (sourcePath: string, imageFileName: string): string => {
   const normalizedFileName = imageFileName.trim().replace(/\\/g, "/");
   const sourceDir = sourcePath.split("/").slice(0, -1).join("/");
@@ -220,13 +272,24 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
     return null;
   }
 
-  const answerLine = lines.slice(delimiterIndex + 1).find((line) => line.trim().length > 0) ?? "";
+  const answerLineIndex = lines.findIndex((line, index) => index > delimiterIndex && line.trim().length > 0);
+  if (answerLineIndex < 0) {
+    return null;
+  }
+
+  const answerLine = lines[answerLineIndex] ?? "";
   const correctOption = parseCorrectOption(answerLine);
   if (!correctOption) {
     return null;
   }
 
+  const answerExplanation = extractExplanationText(lines.slice(answerLineIndex + 1));
+
   const bodyLines = lines.slice(headingIndex + 1, delimiterIndex);
+  const containsMarkdownTable = bodyLines.some((line) => {
+    const trimmed = line.trim();
+    return /^\|.+\|$/.test(trimmed) || (/^[\s:|\-]+$/.test(trimmed) && trimmed.includes("|"));
+  });
   const questionParts: string[] = [];
   const optionLines: string[] = [];
   let firstImagePath: string | null = null;
@@ -235,6 +298,10 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
   bodyLines.forEach((rawLine) => {
     const line = rawLine.trim();
     if (!line) {
+      return;
+    }
+
+    if (isVaultCommentLine(line)) {
       return;
     }
 
@@ -291,8 +358,10 @@ const parseMarkdownQuestion = (sourcePath: string, rawMarkdown: string): ParsedV
     questionText,
     optionLines,
     correctOption,
+    answerExplanation,
     subjectTopic,
     questionImagePath: firstImagePath,
+    containsMarkdownTable,
   };
 };
 
@@ -312,6 +381,7 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
   return parsedVaultQuestions
     .filter((question) => question.examType === settings.examType)
     .filter((question) => selectedTopics.has(question.subjectTopic))
+    .filter((question) => !requiresVisualContent(question.questionText, question.optionLines, question.questionImagePath, question.containsMarkdownTable))
     .map<MockExamQuestion | null>((question, index) => {
       const options = extractOptionsFromLines(question.optionLines);
       if (options.length !== 4) {
@@ -323,21 +393,20 @@ const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
       }
 
       const subjectCategory = deriveCategoryFromTopic(question.subjectTopic);
-      const tableText = /\btable\b/i.test(question.questionText) ? question.questionText : null;
-
       return {
         id: `${question.examCode}::${question.questionNumber}::${index}`,
         pdfName: `${question.examCode}.md`,
         questionNumber: question.questionNumber,
         questionText: question.questionText,
-        tableText,
-        questionImagePath: question.questionImagePath,
+        tableText: null,
+        questionImagePath: null,
         options: options.map((option) => ({
           key: option.key,
           text: option.text,
           imagePath: null as string | null,
         })),
         correctOption: question.correctOption,
+        answerExplanation: question.answerExplanation,
         subjectCategory,
         subjectTopic: question.subjectTopic,
       } satisfies MockExamQuestion;

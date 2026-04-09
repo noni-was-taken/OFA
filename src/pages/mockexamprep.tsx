@@ -23,6 +23,7 @@ export default function MockExamPrepPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>(allTopics);
   const [startError, setStartError] = useState<string | null>(null);
   const formControlClassName = "h-6 w-6 md:h-4 md:w-4 accent-black shrink-0 cursor-pointer";
+  const closeStartErrorModal = () => setStartError(null);
 
   const handleStartExam = () => {
     const examSettings: MockExamSettings = {
@@ -152,7 +153,6 @@ export default function MockExamPrepPage() {
                 LETS GO
               </h1>
             </button>
-            {startError ? <p className="text-sm text-red-700 text-center lg:text-left max-w-sm">{startError}</p> : null}
           </div>
 
           <div className="border border-black h-[70vh] w-full lg:w-[52vw] flex flex-col overflow-hidden">
@@ -303,6 +303,36 @@ export default function MockExamPrepPage() {
 
         <Footer></Footer>
       </div>
+
+      {startError ? (
+        <div
+          className="fixed inset-0 z-999 flex items-center justify-center bg-black/45 backdrop-blur-md px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mock-exam-start-error-title"
+          onClick={closeStartErrorModal}
+        >
+          <div
+            className="w-full max-w-xl border-2 border-black bg-white p-6 md:p-8 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="mock-exam-start-error-title" className="text-2xl md:text-3xl font-bold mb-3">
+              Unable to Start Mock Exam
+            </h2>
+            <p className="text-sm md:text-base text-red-700 leading-relaxed">{startError}</p>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={closeStartErrorModal}
+                className="border-2 border-black px-5 py-2 font-bold hover:bg-black hover:text-white transition-colors duration-200"
+              >
+                CLOSE
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

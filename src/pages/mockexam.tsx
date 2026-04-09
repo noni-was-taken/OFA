@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../components/navbar";
 import Footer from "../components/footer";
-import { CaretLeftIcon, CaretRightIcon, PauseCircleIcon, EyeSlashIcon, SmileySadIcon } from "@phosphor-icons/react";
+import { CaretLeftIcon, CaretRightIcon, PauseCircleIcon, PlayCircleIcon, EyeSlashIcon, EyeIcon, SmileySadIcon } from "@phosphor-icons/react";
 import {
     clearMockExamSession,
     computeMockExamResult,
@@ -40,9 +40,14 @@ export default function MockExamPage() {
     const [hintsUsed, setHintsUsed] = useState(session?.hintsUsed ?? 0);
     const [hintShownByQuestion, setHintShownByQuestion] = useState<Record<string, boolean>>({});
     const [eliminatedOptionsByQuestion, setEliminatedOptionsByQuestion] = useState<Record<string, string[]>>({});
-    const [elapsedSeconds, setElapsedSeconds] = useState(0);
-    const [questionStartedAtMs, setQuestionStartedAtMs] = useState(Date.now());
+    const [showExplanationByQuestion, setShowExplanationByQuestion] = useState<Record<string, boolean>>({});
+    const [elapsedSeconds, setElapsedSeconds] = useState(() =>
+        session ? Math.floor((Date.now() - session.startedAtMs) / 1000) : 0,
+    );
     const [questionElapsedSeconds, setQuestionElapsedSeconds] = useState(0);
+    const [isOverallTimerPaused, setIsOverallTimerPaused] = useState(false);
+    const [isQuestionTimerPaused, setIsQuestionTimerPaused] = useState(false);
+    const [isQuestionTimerVisible, setIsQuestionTimerVisible] = useState(true);
     const hasFinalizedRef = useRef(false);
 
     const questions = session?.questions ?? [];
@@ -69,30 +74,32 @@ export default function MockExamPage() {
     };
 
     useEffect(() => {
-        if (!session) {
+        if (!session || hasFinalizedRef.current || isOverallTimerPaused) {
             return;
         }
 
         const timerId = window.setInterval(() => {
-            const nextElapsed = Math.floor((Date.now() - session.startedAtMs) / 1000);
-            setElapsedSeconds(nextElapsed);
+            setElapsedSeconds((currentSeconds) => currentSeconds + 1);
         }, 1000);
 
         return () => window.clearInterval(timerId);
-    }, [session]);
+    }, [session, isOverallTimerPaused]);
 
     useEffect(() => {
-        setQuestionStartedAtMs(Date.now());
         setQuestionElapsedSeconds(0);
     }, [currentQuestion?.id]);
 
     useEffect(() => {
+        if (!currentQuestion || isQuestionTimerPaused) {
+            return;
+        }
+
         const timerId = window.setInterval(() => {
-            setQuestionElapsedSeconds(Math.floor((Date.now() - questionStartedAtMs) / 1000));
+            setQuestionElapsedSeconds((currentSeconds) => currentSeconds + 1);
         }, 1000);
 
         return () => window.clearInterval(timerId);
-    }, [questionStartedAtMs]);
+    }, [currentQuestion?.id, isQuestionTimerPaused]);
 
     useEffect(() => {
         if (!session || !isTimed || hasFinalizedRef.current || totalDurationSeconds <= 0) {
@@ -187,6 +194,42 @@ export default function MockExamPage() {
         }));
     };
 
+    const handleToggleExplanation = () => {
+        if (!currentQuestion) {
+            return;
+        }
+
+        setShowExplanationByQuestion((current) => {
+            const nextVisible = !current[currentQuestion.id];
+            if (nextVisible) {
+                setIsQuestionTimerPaused(true);
+            }
+
+            return {
+                ...current,
+                [currentQuestion.id]: nextVisible,
+            };
+        });
+    };
+
+    const handleToggleQuestionTimerPause = () => {
+        setIsQuestionTimerPaused((currentValue) => !currentValue);
+    };
+
+    const handleToggleQuestionTimerVisibility = () => {
+        setIsQuestionTimerVisible((currentValue) => {
+            const nextVisible = !currentValue;
+            if (!nextVisible) {
+                setIsQuestionTimerPaused(true);
+            }
+            return nextVisible;
+        });
+    };
+
+    const handleToggleOverallTimerPause = () => {
+        setIsOverallTimerPaused((currentValue) => !currentValue);
+    };
+
     if (!session || !currentQuestion) {
         return (
             <>
@@ -219,6 +262,9 @@ export default function MockExamPage() {
     const instantRevealEnabled = session.settings.instantAnswers && Boolean(selectedAnswer);
     const answerLockedForCurrentQuestion = session.settings.instantAnswers && Boolean(selectedAnswer);
     const selectedAnswerIsCorrect = selectedAnswer === currentQuestion.correctOption;
+    const currentAnswerExplanation = currentQuestion.answerExplanation?.trim() ?? "";
+    const canShowExplanationButton = instantRevealEnabled && Boolean(currentAnswerExplanation);
+    const explanationVisible = Boolean(showExplanationByQuestion[currentQuestion.id]) && canShowExplanationButton;
     const hintVisible = Boolean(hintShownByQuestion[currentQuestion.id]);
     const answerLetterKeys = ["A", "B", "C", "D"] as const;
     const optionByKey = new Map(currentQuestion.options.map((option) => [option.key, option]));
@@ -257,7 +303,21 @@ export default function MockExamPage() {
                     >
                         <CaretLeftIcon className="h-10 md:h-15 w-auto" weight="bold"></CaretLeftIcon>
                     </button>
-                    <h1 className="text-3xl md:text-5xl font-light">{examTimerDisplay}</h1>
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <h1 className="text-3xl md:text-5xl font-light">{examTimerDisplay}</h1>
+                        <button
+                            type="button"
+                            onClick={handleToggleOverallTimerPause}
+                            className="p-1 md:p-2"
+                            aria-label={isOverallTimerPaused ? "Resume overall timer" : "Pause overall timer"}
+                        >
+                            {isOverallTimerPaused ? (
+                                <PlayCircleIcon className="h-8 md:h-10 w-auto" weight="bold"></PlayCircleIcon>
+                            ) : (
+                                <PauseCircleIcon className="h-8 md:h-10 w-auto" weight="bold"></PauseCircleIcon>
+                            )}
+                        </button>
+                    </div>
                     <button
                         type="button"
                         onClick={handleNextQuestion}
@@ -345,11 +405,37 @@ export default function MockExamPage() {
 
                             <div className="flex md:gap-5 gap-4">
                                 <div className="md:h-36 h-24 aspect-square rounded-full flex items-center justify-center border-3 md:border-5">
-                                    <h1 className="md:text-2xl text-xl font-bold">{formatClockFromSeconds(questionElapsedSeconds, false)}</h1>
+                                    {isQuestionTimerVisible ? (
+                                        <h1 className="md:text-2xl text-xl font-bold">{formatClockFromSeconds(questionElapsedSeconds, false)}</h1>
+                                    ) : (
+                                        <h1 className="md:text-lg text-sm font-bold tracking-wide">HIDDEN</h1>
+                                    )}
                                 </div>
                                 <div className="flex flex-col justify-center md:gap-5 gap-2">
-                                    <EyeSlashIcon className="md:h-8 w-auto h-10" weight="bold"></EyeSlashIcon>
-                                    <PauseCircleIcon className="md:h-8 w-auto h-10" weight="bold"></PauseCircleIcon>
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleQuestionTimerVisibility}
+                                        className="cursor-pointer"
+                                        aria-label={isQuestionTimerVisible ? "Hide question timer" : "Show question timer"}
+                                    >
+                                        {isQuestionTimerVisible ? (
+                                            <EyeSlashIcon className="md:h-8 w-auto h-10" weight="bold"></EyeSlashIcon>
+                                        ) : (
+                                            <EyeIcon className="md:h-8 w-auto h-10" weight="bold"></EyeIcon>
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleQuestionTimerPause}
+                                        className="cursor-pointer"
+                                        aria-label={isQuestionTimerPaused ? "Resume question timer" : "Pause question timer"}
+                                    >
+                                        {isQuestionTimerPaused ? (
+                                            <PlayCircleIcon className="md:h-8 w-auto h-10" weight="bold"></PlayCircleIcon>
+                                        ) : (
+                                            <PauseCircleIcon className="md:h-8 w-auto h-10" weight="bold"></PauseCircleIcon>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -366,6 +452,25 @@ export default function MockExamPage() {
                                     ? "Correct answer!"
                                     : `Incorrect. Correct answer is ${currentQuestion.correctOption}.`}
                             </p>
+                        ) : null}
+
+                        {canShowExplanationButton ? (
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    type="button"
+                                    onClick={handleToggleExplanation}
+                                    className="border-2 border-black py-2 px-4 text-sm md:text-base font-bold hover:bg-black hover:text-white transition-colors duration-200"
+                                >
+                                    {explanationVisible ? "HIDE EXPLANATION" : "SHOW EXPLANATION"}
+                                </button>
+
+                                {explanationVisible ? (
+                                    <div className="border border-black/25 bg-black/5 p-3 md:p-4">
+                                        <p className="font-extrabold text-xs md:text-sm mb-2 tracking-wide">HOW THIS IS ANSWERED</p>
+                                        <p className="text-sm md:text-base leading-relaxed whitespace-pre-line">{normalizeLegacySymbols(currentAnswerExplanation)}</p>
+                                    </div>
+                                ) : null}
+                            </div>
                         ) : null}
 
                         <div className="grid grid-cols-2 gap-2 md:gap-0">

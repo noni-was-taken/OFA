@@ -5,8 +5,21 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatClockFromSeconds, loadMockExamResult } from "../exam/mockExamModel";
 
+const PASSING_PERCENTAGE = 60;
+
+const normalizeLegacySymbols = (text: string): string =>
+    text
+        .replace(/\uF0AE|\uF0E0/g, "→")
+        .replace(/\uF0DF/g, "←")
+        .replace(/\uF0A3/g, "≤")
+        .replace(/\uF0B3/g, "≥")
+        .replace(/\uF0B8/g, "÷")
+        .replace(/\uF0B4/g, "×")
+        .replace(/\uF0B9/g, "≠");
+
 export default function MockExamResultsPage() {
     const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+    const [openWrongQuestions, setOpenWrongQuestions] = useState<Record<string, boolean>>({});
     const navigate = useNavigate();
     const result = loadMockExamResult();
 
@@ -36,6 +49,10 @@ export default function MockExamResultsPage() {
 
     const totalTime = formatClockFromSeconds(result.totalTimeSeconds, true);
     const averageTimePerQuestion = formatClockFromSeconds(result.averageTimePerQuestionSeconds, false);
+    const rawScorePercentage = result.totalQuestions === 0 ? 0 : (result.correctAnswers / result.totalQuestions) * 100;
+    const scorePercentage = Number(rawScorePercentage.toFixed(1));
+    const didPass = rawScorePercentage >= PASSING_PERCENTAGE;
+    const wrongQuestions = result.wrongQuestions ?? [];
 
     const toggleCategory = (categoryName: string) => {
         setOpenCategories((current) => ({
@@ -44,22 +61,42 @@ export default function MockExamResultsPage() {
         }));
     };
 
+    const toggleWrongQuestion = (questionId: string) => {
+        setOpenWrongQuestions((current) => ({
+            ...current,
+            [questionId]: !current[questionId],
+        }));
+    };
+
     return (
         <>
             <div className="py-10 md:py-0 md:min-h-screen flex md:w-full flex-col items-center bg-white gap-4 md:gap-10 select-none">
                 <NavBar></NavBar>
-                <div className="w-full min-h-[78vh] md:h-[78vh] px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32">
-                    <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-                        <section className="h-auto md:h-full flex flex-col justify-center items-stretch lg:items-start px-2 sm:px-4 md:px-10">
+                <div className="w-full min-h-[78vh] px-4 sm:px-6 md:px-10 lg:px-20 xl:px-32 pb-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
+                        <section className="flex flex-col items-stretch lg:items-start px-2 sm:px-4 md:px-10">
                             <div className="flex items-end gap-3 sm:gap-5">
                                 <h1 className="text-7xl sm:text-8xl md:text-9xl leading-none font-bold">{result.correctAnswers}</h1>
                                 <h1 className="font-semibold text-2xl sm:text-3xl text-black opacity-50">/{result.totalQuestions}</h1>
                             </div>
+                            <p className={`mt-3 text-lg sm:text-xl font-bold ${didPass ? "text-green-700" : "text-red-700"}`}>
+                                {didPass ? `PASSED (${PASSING_PERCENTAGE}% or higher)` : `NT tried bro (below ${PASSING_PERCENTAGE}%)`}
+                            </p>
 
                             <div className="mt-6 md:mt-8 flex flex-col gap-4 md:gap-5 w-full lg:max-w-sm">
                                 <div className="flex items-baseline justify-between border-b pb-2">
                                     <p className="text-sm uppercase tracking-wide opacity-60">Score</p>
                                     <p className="text-2xl sm:text-3xl font-bold">{result.correctAnswers}/{result.totalQuestions}</p>
+                                </div>
+                                <div className="flex items-baseline justify-between border-b pb-2">
+                                    <p className="text-sm uppercase tracking-wide opacity-60">Score Percentage</p>
+                                    <p className="text-2xl sm:text-3xl font-bold">{scorePercentage}%</p>
+                                </div>
+                                <div className="flex items-baseline justify-between border-b pb-2">
+                                    <p className="text-sm uppercase tracking-wide opacity-60">Result</p>
+                                    <p className={`text-2xl sm:text-3xl font-bold ${didPass ? "text-green-700" : "text-red-700"}`}>
+                                        {didPass ? "Passed" : "Cry to Mam Pena"}
+                                    </p>
                                 </div>
                                 <div className="flex items-baseline justify-between border-b pb-2">
                                     <p className="text-sm uppercase tracking-wide opacity-60">Total Time</p>
@@ -104,12 +141,12 @@ export default function MockExamResultsPage() {
                             </div>
                         </section>
 
-                        <section className="h-auto md:h-full p-4 sm:p-6 md:p-8 flex flex-col gap-6">
+                        <section className="p-4 sm:p-6 md:p-8 flex flex-col gap-6">
                             <h2 className="text-2xl sm:text-3xl font-light">Results Breakdown</h2>
 
-                            <div className="flex flex-col gap-4 md:flex-1 md:min-h-0">
+                            <div className="flex flex-col gap-4">
                                 <h3 className="text-sm uppercase tracking-wide opacity-60">Correct Answers by Category</h3>
-                                <div className="flex flex-col gap-3 md:overflow-y-auto pr-1">
+                                <div className="flex flex-col gap-3 pr-1">
                                     {result.categoryBreakdown.map((category) => {
                                         const isOpen = Boolean(openCategories[category.name]);
 
@@ -151,7 +188,78 @@ export default function MockExamResultsPage() {
                                 </div>
                             </div>
 
-                            <div className="mt-2 md:mt-auto flex flex-col gap-3">
+                            <div className="flex flex-col gap-4 mt-2">
+                                <h3 className="text-sm uppercase tracking-wide opacity-60">Questions You Got Wrong</h3>
+                                {wrongQuestions.length === 0 ? (
+                                    <p className="text-sm border-l-4 border-green-700 text-green-700 pl-3">
+                                        Perfect score. No incorrect questions.
+                                    </p>
+                                ) : (
+                                    <div className="flex flex-col gap-4">
+                                        {wrongQuestions.map((wrongQuestion, index) => {
+                                            const isOpen = Boolean(openWrongQuestions[wrongQuestion.id]);
+
+                                            return (
+                                                <article key={wrongQuestion.id} className="border-2 border-black/20 bg-white">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleWrongQuestion(wrongQuestion.id)}
+                                                        className="w-full p-3 md:p-4 text-left flex items-start justify-between gap-3"
+                                                    >
+                                                        <div className="flex flex-col gap-1">
+                                                            <p className="font-bold text-sm md:text-base">#{wrongQuestion.questionNumber} · {wrongQuestion.subjectTopic}</p>
+                                                            <p className="text-sm md:text-base leading-relaxed whitespace-pre-line">
+                                                                {normalizeLegacySymbols(wrongQuestion.questionText)}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex flex-col items-end gap-1 shrink-0">
+                                                            <p className="text-xs md:text-sm opacity-60">Missed {index + 1}</p>
+                                                            <CaretDownIcon
+                                                                className={`h-4 w-4 opacity-70 transition-transform duration-300 ease-out ${
+                                                                    isOpen ? "rotate-180" : "rotate-0"
+                                                                }`}
+                                                                weight="bold"
+                                                            />
+                                                        </div>
+                                                    </button>
+
+                                                    <div
+                                                        className={`overflow-hidden transition-all duration-300 ease-out ${
+                                                            isOpen ? "max-h-[40rem] opacity-100" : "max-h-0 opacity-0"
+                                                        }`}
+                                                    >
+                                                        <div className="px-3 md:px-4 pb-4 border-t border-black/10 flex flex-col gap-3">
+                                                            <div className="pt-3 flex flex-col gap-2 text-sm md:text-base">
+                                                                <p>
+                                                                    <span className="font-semibold">Your answer:</span>{" "}
+                                                                    {wrongQuestion.selectedOption
+                                                                        ? `${wrongQuestion.selectedOption}${wrongQuestion.selectedOptionText ? ` - ${normalizeLegacySymbols(wrongQuestion.selectedOptionText)}` : ""}`
+                                                                        : "No answer selected"}
+                                                                </p>
+                                                                <p className="text-green-700">
+                                                                    <span className="font-semibold">Correct answer:</span>{" "}
+                                                                    {`${wrongQuestion.correctOption}${wrongQuestion.correctOptionText ? ` - ${normalizeLegacySymbols(wrongQuestion.correctOptionText)}` : ""}`}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="border-l-4 border-black pl-3">
+                                                                <p className="text-xs uppercase tracking-wide opacity-70 font-semibold">How to answer it</p>
+                                                                <p className="mt-1 text-sm md:text-base leading-relaxed whitespace-pre-line">
+                                                                    {wrongQuestion.answerExplanation
+                                                                        ? normalizeLegacySymbols(wrongQuestion.answerExplanation)
+                                                                        : "No detailed explanation available in the source markdown for this item."}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-2 flex flex-col gap-3">
                                 <div className="flex items-baseline justify-between border-b pb-2">
                                     <p className="text-sm uppercase tracking-wide opacity-60">Hints Used</p>
                                     <p className="text-xl sm:text-2xl font-bold">{result.hintsUsed}</p>
