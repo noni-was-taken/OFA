@@ -45,6 +45,15 @@ export default function MockExamPrepPage() {
   const [questionCount, setQuestionCount] = useState(80);
   const [instantAnswers, setInstantAnswers] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>(allTopics);
+  const formControlClassName = "h-6 w-6 md:h-4 md:w-4 accent-black shrink-0 cursor-pointer";
+
+  const applyActualExamDefaults = () => {
+    setIsTimed(true);
+    setDurationMinutes(90);
+    setQuestionCount(80);
+    setInstantAnswers(false);
+    setSelectedTopics(allTopics);
+  };
 
   const toggleTopic = (topic: string) => {
     setSelectedTopics((currentTopics) => {
@@ -91,9 +100,10 @@ export default function MockExamPrepPage() {
     return (
       <fieldset key={categoryName} className="border-2 p-3 lg:p-4">
         <div className="mb-3">
-          <label className="inline-flex items-center gap-2 text-base lg:text-lg font-medium">
+          <label className="inline-flex items-center gap-3 py-1 text-base lg:text-lg font-medium cursor-pointer">
             <input
               type="checkbox"
+              className={formControlClassName}
               checked={isCategoryFullySelected}
               onChange={() => toggleCategory(categoryName)}
             />
@@ -102,9 +112,10 @@ export default function MockExamPrepPage() {
         </div>
         <div className="grid grid-cols-1 gap-2">
           {topics.map((topic) => (
-            <label key={topic} className="flex items-center gap-2 text-sm lg:text-base">
+            <label key={topic} className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
               <input
                 type="checkbox"
+                className={formControlClassName}
                 checked={selectedTopics.includes(topic)}
                 onChange={() => toggleTopic(topic)}
               />
@@ -122,36 +133,51 @@ export default function MockExamPrepPage() {
         <NavBar></NavBar>
 
         <div className="min-h-[78vh] w-full flex flex-col lg:flex-row items-center  justify-between px-6 lg:px-20 gap-10">
-          <div className="flex flex-col gap-10 w-full lg:w-auto">
+          
+          <div className="flex flex-col gap-10 w-full lg:w-auto lg:items-start items-center">
             <h1 className="-tracking-widest text-6xl lg:text-8xl">You ready?</h1>
             <button className="flex py-6 lg:py-8 items-center justify-center border-2 duration-300 group hover:bg-black cursor-pointer">
-              <h1 className="text-2xl group-hover:text-white font-bold group-hover:font-light duration-300">
+              <h1 className="text-2xl w-50 group-hover:text-white font-bold group-hover:font-light duration-300">
                 LETS GO
               </h1>
             </button>
           </div>
 
-          <div className="border-2 h-[70vh] w-full lg:w-[52vw] flex flex-col overflow-hidden">
-            <div className="border-b-2 p-4 lg:p-6 flex flex-col gap-4">
-              <h1 className="font-light text-3xl">Exam Type</h1>
-              <div className="w-full flex gap-3">
+          <div className="border border-black h-[70vh] w-full lg:w-[52vw] flex flex-col overflow-hidden">
+            <div className="flex gap-10 border-b-2 py-7 md:py-0">
+              <div className="p-4 lg:p-6 flex flex-col gap-4 flex-1">  
+                <h1 className="font-light text-3xl">Exam Type</h1>
+                <div className="w-full flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setExamType("AM EXAM")}
+                    className={`font-medium text-base lg:text-xl px-4 py-2 border-2 flex-1 duration-200 cursor-pointer ${
+                      examType === "AM EXAM" ? "bg-black text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    AM EXAM
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExamType("PM EXAM")}
+                    className={`font-medium text-base lg:text-xl px-4 py-2 border-2 flex-1 duration-200 cursor-pointer ${
+                      examType === "PM EXAM" ? "bg-black text-white" : "bg-white text-black"
+                    }`}
+                  >
+                    PM EXAM
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col items-center justify-center border-l-2 gap-4">
+                <p className="text-gray-700 text-center">
+                  If you want an actual exam simulation:
+                </p>
                 <button
                   type="button"
-                  onClick={() => setExamType("AM EXAM")}
-                  className={`font-medium text-base lg:text-xl px-4 py-2 border-2 flex-1 duration-200 cursor-pointer ${
-                    examType === "AM EXAM" ? "bg-black text-white" : "bg-white text-black"
-                  }`}
+                  onClick={applyActualExamDefaults}
+                  className="border-2 py-4 px-7 font-extrabold duration-300 hover:bg-black hover:text-white hover:font-light cursor-pointer"
                 >
-                  AM EXAM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setExamType("PM EXAM")}
-                  className={`font-medium text-base lg:text-xl px-4 py-2 border-2 flex-1 duration-200 cursor-pointer ${
-                    examType === "PM EXAM" ? "bg-black text-white" : "bg-white text-black"
-                  }`}
-                >
-                  PM EXAM
+                  ACTUAL EXAM
                 </button>
               </div>
             </div>
@@ -162,19 +188,21 @@ export default function MockExamPrepPage() {
                 <section className="flex flex-col gap-3 lg:flex-1">
                   <h2 className="text-2xl font-light">Timer</h2>
                   <div className="flex gap-5 items-center">
-                    <label className="flex items-center gap-2 text-sm lg:text-base">
+                    <label className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
                       <input
                         type="radio"
                         name="timed-mode"
+                        className={formControlClassName}
                         checked={isTimed}
                         onChange={() => setIsTimed(true)}
                       />
                       Timed
                     </label>
-                    <label className="flex items-center gap-2 text-sm lg:text-base">
+                    <label className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
                       <input
                         type="radio"
                         name="timed-mode"
+                        className={formControlClassName}
                         checked={!isTimed}
                         onChange={() => setIsTimed(false)}
                       />
@@ -230,9 +258,10 @@ export default function MockExamPrepPage() {
               
               <section className="flex flex-col gap-3 pb-2">
                 <h2 className="text-2xl font-light">Answer Reveal</h2>
-                <label className="flex items-center gap-2 text-sm lg:text-base">
+                <label className="flex items-center gap-3 py-1 text-sm lg:text-base cursor-pointer">
                   <input
                     type="checkbox"
+                    className={formControlClassName}
                     checked={instantAnswers}
                     onChange={(event) => setInstantAnswers(event.target.checked)}
                   />

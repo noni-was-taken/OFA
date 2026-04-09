@@ -4,6 +4,7 @@ import HomePage from './pages/homepage'
 import NotesPage from './pages/notes'
 import MockExamPage from './pages/mockexam'
 import MockExamPrepPage from './pages/mockexamprep'
+import MockExamResultsPage from './pages/mockexamresults'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/mockexam" element={<MockExamPage />} />
         <Route path="/mockexamprep" element={<MockExamPrepPage />} />
+        <Route path='/mockexamresults' element={<MockExamResultsPage/>} />
       </Routes>
     </>
   )

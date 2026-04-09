@@ -136,19 +136,19 @@ export default function MockExamPage(){
                     </div>
                     <div className='grid md:grid-cols-2 grid-cols-2 gap-2 md:gap-0'>
                         <button className=' hover:text-black hover:bg-white hover:font-extrabold duration-300 cursor-pointer
-                                        text-white bg-black px-5 py-2 md:px-10 md:py-5 md:text-2xl border border-white'> 
+                                        text-white bg-black px-5 py-7 md:px-10 md:py-5 md:text-2xl border border-white'> 
                             A
                         </button>
                         <button className=' hover:text-black hover:bg-white hover:font-extrabold duration-300 cursor-pointer
-                                        text-white bg-black  px-5 py-2 md:px-10 md:py-5 md:text-2xl border border-white'> 
+                                        text-white bg-black  px-5 py-7 md:px-10 md:py-5 md:text-2xl border border-white'> 
                             B
                         </button>
                         <button className=' hover:text-black hover:bg-white hover:font-extrabold duration-300 cursor-pointer
-                                        text-white bg-black  px-5 py-2 md:px-10 md:py-5 md:text-2xl border border-white'> 
+                                        text-white bg-black  px-5 py-7 md:px-10 md:py-5 md:text-2xl border border-white'> 
                             C
                         </button>
                         <button className=' hover:text-black hover:bg-white hover:font-extrabold duration-300 cursor-pointer
-                                        text-white bg-black  px-5 py-2 md:px-10 md:py-5 md:text-2xl border border-white'> 
+                                        text-white bg-black  px-5 py-7 md:px-10 md:py-5 md:text-2xl border border-white'> 
                             D
                         </button>
                     </div>
