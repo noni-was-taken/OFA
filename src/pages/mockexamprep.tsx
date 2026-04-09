@@ -156,7 +156,8 @@ export default function MockExamPrepPage() {
           </div>
 
           <div className="border border-black h-[70vh] w-full lg:w-[52vw] flex flex-col overflow-hidden">
-            <div className="flex gap-10 border-b-2 py-7 md:py-0">
+            <div className="flex md:gap-10 border-b-2 py-7 md:py-0">
+              
               <div className="p-4 lg:p-6 flex flex-col gap-4 flex-1">  
                 <h1 className="font-light text-3xl">Exam Type</h1>
                 <div className="w-full flex gap-3">
@@ -180,7 +181,8 @@ export default function MockExamPrepPage() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 flex flex-col items-center justify-center border-l-2 gap-4">
+              
+              <div className="flex-1 flex flex-col items-center justify-center border-l-2 gap-4 px-2">
                 <p className="text-gray-700 text-center">
                   If you want an actual exam simulation:
                 </p>
@@ -195,7 +197,7 @@ export default function MockExamPrepPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 lg:p-6 flex flex-col gap-7">
-              <div className="flex flex-col lg:flex-row gap-6 p-4">
+              <div className="flex flex-col md:flex-row md:justify-between gap-6 p-4">
                 {/* TIMER */}
                 <section className="flex flex-col gap-3 lg:flex-1">
                   <h2 className="text-2xl font-light">Timer</h2>

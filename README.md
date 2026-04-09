@@ -2,11 +2,11 @@
 
 NitPick is a React + TypeScript web app for FE exam preparation. 
 
-## NOTE
+## Warning
 this is a rush side project, there might be bugs but I intend to fix later, but for now, 
 just have fun and study <3
 
-
+## Features
 It includes:
 - Mock exam generation from the question vault
 - Configurable exam setup (timed/untimed, question count, topic filters)

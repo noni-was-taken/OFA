@@ -1,5 +1,4 @@
 import React from "react";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import NavBar from "../components/navbar";
 import Footer from '../components/footer'
 
@@ -200,24 +199,13 @@ const notesData = [
 // ==========================================
 
 export default function NotesPage() {
-    const topicsScrollRef = React.useRef<HTMLDivElement>(null);
-
-    const scrollTopicsLeft = () => {
-        topicsScrollRef.current?.scrollBy({ left: -500, behavior: "smooth" });
-    };
-
-    const scrollTopicsRight = () => {
-        topicsScrollRef.current?.scrollBy({ left: 500, behavior: "smooth" });
-    };
-
     return (
         <div className="min-h-screen flex w-full flex-col items-center bg-white gap-5 select-none font-sans">
             <NavBar />
 
-            <div className="h-[90vh] w-full flex items-center justify-center ">
-                <h1 className="text-9xl">
-                    COMING SOON :)
-                </h1>
+            <div className="h-[90vh] w-full flex flex-col items-center justify-center gap-4">
+                <h1 className="text-9xl">COMING SOON :)</h1>
+                <p className="text-sm opacity-70">{notesData.length} study topics are drafted and will be published here soon.</p>
             </div>
             
             {/* FOOTER PADDING */}
@@ -225,39 +213,6 @@ export default function NotesPage() {
         </div>
     );
 }
-
-// ==========================================
-// 3. SUBCOMPONENTS
-// ==========================================
-
-type CategorySwitchProps = {
-    label: string
-    prompt: string
-}
-
-function CategorySwitch({ label, prompt }: CategorySwitchProps) {
-    return (
-        <button
-            type="button"
-            className="group relative isolate h-16 min-w-50 cursor-pointer overflow-hidden bg-white px-6 border border-gray-200 transition-all hover:border-black"
-        >
-            <span
-                aria-hidden="true"
-                className="absolute inset-y-0 right-0 z-0 w-0 bg-black transition-[width] duration-300 group-hover:w-full"
-            />
-
-            <span className="relative z-10 flex h-full items-center justify-center">
-                <h1 className="text-black font-light text-2xl transition-opacity duration-150 group-hover:opacity-0">
-                    {label}
-                </h1>
-                <h1 className="pointer-events-none absolute text-white text-sm font-medium tracking-widest opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    {prompt}
-                </h1>
-            </span>
-        </button>
-    );
-}
-
 
             // {/* TITLE AND CATEGORY CHANGE */}
             // <div className="w-full min-h-[20vh] px-10 flex items-center justify-between border-b border-gray-100 pb-5">

@@ -30,11 +30,6 @@ export default function HomePage(){
         }
     }, [])
 
-    const openGoogleSearch = (query: string) => {
-        const encoded = encodeURIComponent(query)
-        window.open(`https://www.google.com/search?q=${encoded}`, "_blank", "noopener,noreferrer")
-    }
-
     return(
         <>
         <div className="min-h-screen flex w-full flex-col items-center bg-white gap-10 select-none">
@@ -42,7 +37,7 @@ export default function HomePage(){
             <NavBar></NavBar>
             
             {/* HERO */}
-            <div className="w-[95vw] h-[40vh] flex items-end justify-end px-8 py-4 border-r-5 border-black">
+            <div className="w-[95vw] h-[40vh] md:flex items-end justify-end px-8 py-4 border-r-5 border-black hidden ">
                 <div className="absolute h-[40vh] w-[90vw] flex items-center justify-start">
                     <h1 className="text-5xl lg:text-9xl  opacity-30">
                         PHILNITS NLNG GUD
@@ -54,7 +49,7 @@ export default function HomePage(){
             </div>
 
             {/* INFORMATION */}
-            <div className="w-full min-h-[20vh] flex flex-col items-center">
+            <div className="w-full min-h-[20vh] flex-col items-center hidden md:flex">
                 <h1 className="text-3xl font-bold mb-5">
                     What THE HELL is NitPicker?
                 </h1>
@@ -81,6 +76,23 @@ export default function HomePage(){
                     ></IconWithDesc>
 
                 </div>
+            </div>
+
+            <div className="h-[90vh] w-screen flex md:hidden items-center justify-center flex-col">
+                <h1 className="text-3xl px-10 text-center font-light">
+                    Features such as previous exams and notes are not available on mobile devices 
+                </h1>
+                <h1 className="text-xl font-bold opacity-50">
+                    yet... :)
+                </h1>
+
+                <button className="text-2xl font-light text-white bg-black h-20 w-40 mt-10" onClick={() => navigate('/mockexamprep')}>
+                    PROCEED TO MOCK EXAM
+                </button>   
+            </div>
+
+            <div className="">
+
             </div>
 
             {/* FOOTER */}
