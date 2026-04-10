@@ -136,11 +136,39 @@ const safeLoad = <T>(key: string): T | null => {
   }
 };
 
+const isMockExamSession = (value: unknown): value is MockExamSession => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const session = value as Partial<MockExamSession>;
+
+  return (
+    typeof session.sessionId === "string" &&
+    typeof session.createdAtMs === "number" &&
+    typeof session.startedAtMs === "number" &&
+    typeof session.currentQuestionIndex === "number" &&
+    typeof session.hintsUsed === "number" &&
+    Boolean(session.settings) &&
+    Array.isArray(session.questions) &&
+    Boolean(session.answers) &&
+    typeof session.answers === "object"
+  );
+};
+
 export const saveMockExamSession = (session: MockExamSession) => {
   safeSave(SESSION_STORAGE_KEY, session);
 };
 
-export const loadMockExamSession = (): MockExamSession | null => safeLoad<MockExamSession>(SESSION_STORAGE_KEY);
+export const loadMockExamSession = (): MockExamSession | null => {
+  const loaded = safeLoad<unknown>(SESSION_STORAGE_KEY);
+
+  if (!isMockExamSession(loaded)) {
+    return null;
+  }
+
+  return loaded;
+};
 
 export const clearMockExamSession = () => {
   try {

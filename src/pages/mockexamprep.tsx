@@ -6,6 +6,8 @@ import {
   allTopics,
   categoryTopics,
   clearMockExamResult,
+  clearMockExamSession,
+  loadMockExamSession,
   saveMockExamSession,
   type CategoryName,
   type MockExamSettings,
@@ -22,10 +24,26 @@ export default function MockExamPrepPage() {
   const [instantAnswers, setInstantAnswers] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>(allTopics);
   const [startError, setStartError] = useState<string | null>(null);
+  const [hasActiveSession, setHasActiveSession] = useState(() => {
+    const session = loadMockExamSession();
+    return Boolean(session && session.questions.length > 0);
+  });
+  const [showResumeModal, setShowResumeModal] = useState(false);
   const formControlClassName = "h-6 w-6 md:h-4 md:w-4 accent-black shrink-0 cursor-pointer";
   const closeStartErrorModal = () => setStartError(null);
+  const closeResumeModal = () => setShowResumeModal(false);
 
-  const handleStartExam = () => {
+  const handleStartExam = (forceStartNew = false) => {
+    if (hasActiveSession && !forceStartNew) {
+      setShowResumeModal(true);
+      return;
+    }
+
+    if (forceStartNew) {
+      clearMockExamSession();
+      setHasActiveSession(false);
+      setShowResumeModal(false);
+    }
     
     if (questionCount === '') {
       setStartError("Please enter the number of questions");
@@ -66,6 +84,12 @@ export default function MockExamPrepPage() {
     setStartError(null);
     clearMockExamResult();
     saveMockExamSession(session);
+    setHasActiveSession(true);
+    navigate("/mockexam");
+  };
+
+  const handleResumeExam = () => {
+    setShowResumeModal(false);
     navigate("/mockexam");
   };
 
@@ -353,6 +377,45 @@ export default function MockExamPrepPage() {
                 className="border-2 border-black px-5 py-2 font-bold hover:bg-black hover:text-white transition-colors duration-200"
               >
                 CLOSE
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showResumeModal ? (
+        <div
+          className="fixed inset-0 z-999 flex items-center justify-center bg-black/45 backdrop-blur-md px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mock-exam-resume-title"
+          onClick={closeResumeModal}
+        >
+          <div
+            className="w-full max-w-xl border-2 border-black bg-white p-6 md:p-8 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="mock-exam-resume-title" className="text-2xl md:text-3xl font-bold mb-3">
+              Resume Mock Exam?
+            </h2>
+            <p className="text-sm md:text-base leading-relaxed opacity-80">
+              You already have an active mock exam in progress. Continue where you left off, or start a new exam and replace it.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={handleResumeExam}
+                className="border-2 border-black bg-black text-white px-5 py-2 font-bold hover:bg-white hover:text-black transition-colors duration-200"
+              >
+                RESUME EXAM
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStartExam(true)}
+                className="border-2 border-black px-5 py-2 font-bold hover:bg-black hover:text-white transition-colors duration-200"
+              >
+                START NEW EXAM
               </button>
             </div>
           </div>
