@@ -46,6 +46,9 @@ Markdown and math in explanations are rendered in HTML using:
 - Vite
 - Tailwind CSS
 - Phosphor Icons
+- Vitest
+- i18next / react-i18next
+- Sentry (optional, env-gated)
 
 ## Getting Started
 
@@ -72,6 +75,34 @@ npm run build
 ```bash
 npm run preview
 ```
+
+5. Run tests
+
+```bash
+npm run test
+```
+
+6. Run Storybook
+
+```bash
+npm run storybook
+```
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and configure as needed:
+
+- `VITE_MOCK_EXAM_IMAGE_BASE_PATH`
+- `VITE_ENABLE_ANALYTICS`
+- `VITE_GA_MEASUREMENT_ID`
+- `VITE_ENABLE_ERROR_TRACKING`
+- `VITE_SENTRY_DSN`
+
+## PWA
+
+- Manifest: `public/manifest.webmanifest`
+- Service worker: `public/sw.js`
+- Registered in production from `src/main.tsx`
 
 ## Project Structure
 

@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
+storybook-static
 *.local
 
 # Editor directories and files
@@ -23,3 +25,20 @@ dist-ssr
 *.sln
 *.sw?
 .venv
+
+# Internal planning/handoff markdown docs
+COMPREHENSIVE_ANALYSIS.md
+IMPLEMENTATION_PLAN.md
+IMPLEMENTATION_SUMMARY.md
+ISSUES_TRACKER.md
+HANDOFF_VERIFIED.md
+PHASE_1_HANDOFF.md
+PHASE_1_VERIFICATION.md
+PHASE_2_HANDOFF.md
+PHASE_3_4_HANDOFF.md
+FINAL_PHASES_HANDOFF.md
+ARCHITECTURE.md
+CONTRIBUTING.md
+STYLE_GUIDE.md
+COMPONENT_API.md
+AGENTS.md
