@@ -6,6 +6,8 @@ NitPicker is a React + TypeScript web app for Philnits FE exam preparation.
 this is a rush side project, there might be bugs but I intend to fix later, but for now, 
 just have fun and study <3
 
+# IF YOU WANT CONTRIBUTE, YOU CAN ADD YOUR NAME TO THE FOOTER BELOW!!
+
 ## Features
 It includes:
 - Mock exam generation from the question vault

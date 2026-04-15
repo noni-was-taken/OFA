@@ -28,6 +28,16 @@ const featuredNotes: FeaturedNote[] = [
   },
 ]
 
+const contactEmails = [
+  '22101691@usc.edu.ph',
+  '22101440@usc.edu.ph',
+  '31200250@usc.edu.ph',
+  '11820049@usc.edu.ph',
+]
+
+const gmailComposeLink = (email: string) =>
+  `https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=${encodeURIComponent(email)}`
+
 export default function NotesPage() {
   return (
     <Layout className="py-10 md:py-0 gap-6 md:gap-10 select-none">
@@ -36,7 +46,23 @@ export default function NotesPage() {
           <div className="mb-8 text-center md:mb-10">
             <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white md:text-4xl">Featured Notes</h1>
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 md:text-base">
-              DM Jose Miguel Carumba on Facebook if you would like your notes to be featured
+              DM <a href="https://www.facebook.com/demonacolyte9123" className='font-bold underline '>Jose Miguel Carumba</a> on Facebook if you would like your notes to be featured
+            </p>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300 md:text-base">
+              or email us at either{' '}
+              {contactEmails.map((email, index) => (
+                <span key={email}>
+                  <a
+                    href={gmailComposeLink(email)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold underline"
+                  >
+                    {email}
+                  </a>
+                  {index < contactEmails.length - 1 ? ' - ' : ''}
+                </span>
+              ))}
             </p>
           </div>
 
