@@ -75,7 +75,7 @@ export default function NavBar(){
                     <Link to="/" onClick={closeMenu} className="text-xl font-bold group-hover:text-white dark:group-hover:text-black transition-all duration-300">HOME</Link>
                 </div>
                 <div className="px-2 py-1 group hover:bg-black dark:hover:bg-white transition-all duration-300">
-                    <span className="text-xl font-bold group-hover:text-white dark:group-hover:text-black opacity-30 transition-all duration-300">NOTES</span>
+                    <Link to="/notes" onClick={closeMenu} className="text-xl font-bold group-hover:text-white dark:group-hover:text-black transition-all duration-300">NOTES</Link>
                 </div>
                 <div className="px-2 py-1 group hover:bg-black dark:hover:bg-white transition-all duration-300">
                     <Link to="/mockexam" onClick={closeMenu} className="text-xl font-bold group-hover:text-white dark:group-hover:text-black transition-all duration-300">MOCK EXAM</Link>
