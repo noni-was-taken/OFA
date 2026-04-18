@@ -8,7 +8,7 @@ import LogoDark from '../assets/picker-dark.svg'
 import { useTheme } from "../hooks/useTheme";
 import Layout from "../components/Layout";
 
-export default function HomePage(){
+export default function HomePage() {
     const navigate = useNavigate()
     const { isDark } = useTheme()
 
@@ -33,13 +33,13 @@ export default function HomePage(){
         }
     }, [])
 
-    return(
+    return (
         <Layout className="py-10 md:py-0 select-none">
             {/* HERO */}
             <div className="w-[95vw] h-[40vh] md:flex items-end justify-end px-8 py-4 border-r-5 border-black dark:border-white hidden ">
                 <div className="absolute h-[40vh] w-[90vw] flex items-center justify-start">
                     <h1 className="text-5xl lg:text-9xl opacity-30 text-black dark:text-white">
-                        2 WEEKS LEFT :)
+                        Checkout notes page!
                     </h1>
                 </div>
                 <h1 className="text-4xl text-black dark:text-white">
@@ -78,13 +78,13 @@ export default function HomePage(){
             </div>
 
             <div className="h-[90vh] w-screen flex md:hidden items-center justify-center flex-col">
-                
-                <img src= {isDark ? LogoDark : Logo} alt="NitPicker logo" className='h-26 w-auto mb-5' />
+
+                <img src={isDark ? LogoDark : Logo} alt="NitPicker logo" className='h-26 w-auto mb-5' />
 
                 <h1 className="text-3xl px-10 text-center font-light text-black dark:text-white">
-                    Welcome to NitPicker! 
+                    Welcome to NitPicker!
                 </h1>
-            
+
 
                 <button
                     type="button"
@@ -105,7 +105,7 @@ export default function HomePage(){
                 </button>
             </div>
 
-            
+
 
         </Layout>
     )
@@ -131,7 +131,7 @@ export function IconWithDesc({ content, Icon, onClick }: IconWithDescProps) {
             <div className="
             pointer-events-none absolute top-full mt-4 w-44 px-3 py-2 text-center text-sm opacity-0 -translate-y-49 transition-all -translate-x-22 duration-300 group-hover:opacity-100 group-hover:translate-x-0 flex item-center h-100">
                 <h1 className="text-7xl text-white dark:text-black font-extrabold [-webkit-text-stroke:1px_black] dark:[-webkit-text-stroke:1px_white]">
-                    { content }
+                    {content}
                 </h1>
             </div>
         </div>

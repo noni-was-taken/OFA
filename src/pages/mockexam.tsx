@@ -371,13 +371,27 @@ export default function MockExamPage() {
                                 <p className="font-extrabold text-xs md:text-sm tracking-wide">IMAGES</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {allQuestionImagePaths.map((imagePath, imageIndex) => (
-                                        <img
-                                            key={`${currentQuestion.id}-question-image-${imageIndex}`}
-                                            src={resolveChoiceImageUrl(imagePath)}
-                                            alt={`Question visual ${imageIndex + 1}`}
-                                            className="max-h-56 w-auto object-contain border border-black/10 bg-white"
-                                            loading="lazy"
-                                        />
+                                        <div key={`${currentQuestion.id}-question-image-${imageIndex}`} className="question-image-container flex flex-col justify-center border border-black/10 bg-white dark:border-white/25 dark:bg-white/5 overflow-hidden">
+                                            <img
+                                                src={resolveChoiceImageUrl(imagePath)}
+                                                alt={`Question visual ${imageIndex + 1}`}
+                                                className="max-h-56 w-auto object-contain block mx-auto py-2"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    const target = e.currentTarget;
+                                                    target.style.display = "none";
+                                                    const placeholder = target.nextElementSibling as HTMLElement | null;
+                                                    if (placeholder) placeholder.style.display = "flex";
+                                                }}
+                                            />
+                                            <div
+                                                className="hidden flex-col items-center justify-center p-4 text-xs opacity-60 gap-2 min-h-[100px]"
+                                                style={{ display: "none" }}
+                                            >
+                                                <span>📷</span>
+                                                <span>Image pending: {imagePath.split("/").pop()}</span>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
@@ -388,12 +402,27 @@ export default function MockExamPage() {
                                 <div key={`${currentQuestion.id}-choice-${choice.key}`} className="border-b border-black/25 pb-3">
                                     <p className="font-extrabold text-sm md:text-base mb-2">{choice.key}.</p>
                                     {choice.imagePath ? (
-                                        <img
-                                            src={resolveChoiceImageUrl(choice.imagePath)}
-                                            alt={`Choice ${choice.key}`}
-                                            className="max-h-48 w-auto object-contain border border-black/10"
-                                            loading="lazy"
-                                        />
+                                        <div className="question-image-container flex flex-col justify-center border border-black/10 bg-white dark:border-white/25 dark:bg-white/5 overflow-hidden mb-2">
+                                            <img
+                                                src={resolveChoiceImageUrl(choice.imagePath)}
+                                                alt={`Choice ${choice.key}`}
+                                                className="max-h-48 w-auto object-contain block mx-auto py-2"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    const target = e.currentTarget;
+                                                    target.style.display = "none";
+                                                    const placeholder = target.nextElementSibling as HTMLElement | null;
+                                                    if (placeholder) placeholder.style.display = "flex";
+                                                }}
+                                            />
+                                            <div
+                                                className="hidden flex-col items-center justify-center p-4 text-xs opacity-60 gap-2 min-h-[100px]"
+                                                style={{ display: "none" }}
+                                            >
+                                                <span>📷</span>
+                                                <span>Image pending: {choice.imagePath.split("/").pop()}</span>
+                                            </div>
+                                        </div>
                                     ) : null}
                                     {choice.text ? (
                                         <div className="text-sm md:text-base mt-2 prose prose-sm max-w-none prose-p:my-0">
