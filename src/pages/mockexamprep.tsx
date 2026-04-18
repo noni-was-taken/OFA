@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -13,7 +13,7 @@ import {
   type CategoryName,
   type MockExamSettings,
 } from "../exam/mockExamModel";
-import { buildMockExamSession } from "../exam/mockExamQuestionBank";
+import { buildMockExamSession, getAllAvailableYears, getEligibleQuestionCount } from "../exam/mockExamQuestionBank";
 import { UI_LIMITS } from "../config/constants";
 import { trackEvent } from "../lib/analytics";
 
@@ -26,6 +26,7 @@ export default function MockExamPrepPage() {
   const [questionCountInput, setQuestionCountInput] = useState<string>(String(UI_LIMITS.defaultQuestionCount));
   const [instantAnswers, setInstantAnswers] = useState(false);
   const [selectedTopics, setSelectedTopics] = useState<string[]>(allTopics);
+  const [selectedYears, setSelectedYears] = useState<string[]>(() => getAllAvailableYears());
   const [startError, setStartError] = useState<string | null>(null);
   const [inputValidationError, setInputValidationError] = useState<string | null>(null);
   const [hasActiveSession, setHasActiveSession] = useState(() => {
@@ -38,6 +39,25 @@ export default function MockExamPrepPage() {
   const closeStartErrorModal = () => setStartError(null);
   const closeInputValidationModal = () => setInputValidationError(null);
   const closeResumeModal = () => setShowResumeModal(false);
+
+  const availableCount = useMemo(() => {
+    return getEligibleQuestionCount({
+      examType,
+      isTimed,
+      durationMinutes: 1,
+      questionCount: 1,
+      instantAnswers,
+      selectedTopics,
+      selectedYears,
+    });
+  }, [examType, selectedTopics, selectedYears, isTimed, instantAnswers]);
+
+  useEffect(() => {
+    const currentReq = Number(questionCountInput);
+    if (currentReq > availableCount && availableCount > 0) {
+      setQuestionCountInput(String(availableCount));
+    }
+  }, [availableCount, questionCountInput]);
 
   const parseWholeNumber = (rawValue: string): number | null => {
     const trimmed = rawValue.trim();
@@ -53,6 +73,9 @@ export default function MockExamPrepPage() {
     const parsed = parseWholeNumber(rawValue);
     if (parsed === null || parsed < 1 || parsed > UI_LIMITS.maxQuestionCount) {
       return `Input not allowed. Questions must be between 1 and ${UI_LIMITS.maxQuestionCount}.`;
+    }
+    if (parsed > availableCount) {
+      return `Input not allowed. Only ${availableCount} questions match the current filters.`;
     }
 
     return null;
@@ -86,6 +109,12 @@ export default function MockExamPrepPage() {
       return;
     }
 
+    if (selectedYears.length === 0) {
+      setInputValidationError("You have to choose at least 1 year.");
+      setIsStartingExam(false);
+      return;
+    }
+
     const safeQuestionCount = Number(questionCountInput);
     const parsedDurationMinutes = parseWholeNumber(durationInput);
     if (isTimed && (parsedDurationMinutes === null || parsedDurationMinutes < 1)) {
@@ -105,6 +134,7 @@ export default function MockExamPrepPage() {
       questionCount: safeQuestionCount,
       instantAnswers,
       selectedTopics,
+      selectedYears,
     };
 
     const session = buildMockExamSession(examSettings);
@@ -146,6 +176,7 @@ export default function MockExamPrepPage() {
     setQuestionCountInput(String(UI_LIMITS.defaultQuestionCount));
     setInstantAnswers(false);
     setSelectedTopics(allTopics);
+    setSelectedYears(getAllAvailableYears());
   };
 
   const toggleTopic = (topic: string) => {
@@ -160,6 +191,21 @@ export default function MockExamPrepPage() {
       }
 
       return nextTopics;
+    });
+  };
+
+  const toggleYear = (year: string) => {
+    setSelectedYears((currentYears) => {
+      const isSelected = currentYears.includes(year);
+      const nextYears = isSelected
+        ? currentYears.filter((currentYear) => currentYear !== year)
+        : [...currentYears, year];
+
+      if (nextYears.length === 0) {
+        setInputValidationError("You have to choose at least 1 year.");
+      }
+
+      return nextYears;
     });
   };
 
@@ -178,6 +224,46 @@ export default function MockExamPrepPage() {
 
       return nextTopics;
     });
+  };
+
+  const renderYearsFieldset = () => {
+    const years = getAllAvailableYears();
+    const isAllYearsSelected = years.every((year) => selectedYears.includes(year));
+
+    return (
+      <fieldset className="border-2 p-3 lg:p-4 dark:border-white/30">
+        <div className="mb-3">
+          <label className="inline-flex items-center gap-3 py-1 text-base lg:text-lg font-medium cursor-pointer">
+            <input
+              type="checkbox"
+              className={formControlClassName}
+              checked={isAllYearsSelected}
+              onChange={() => {
+                const nextYears = isAllYearsSelected ? [] : years;
+                setSelectedYears(nextYears);
+                if (nextYears.length === 0) {
+                  setInputValidationError("You have to choose at least 1 year.");
+                }
+              }}
+            />
+            <span>All Years</span>
+          </label>
+        </div>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {years.map((year) => (
+            <label key={year} className="flex items-center gap-2 py-1 text-sm lg:text-base cursor-pointer">
+              <input
+                type="checkbox"
+                className={formControlClassName}
+                checked={selectedYears.includes(year)}
+                onChange={() => toggleYear(year)}
+              />
+              <span>{year}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
   };
 
   const renderCategoryFieldset = (categoryName: CategoryName) => {
@@ -339,7 +425,9 @@ export default function MockExamPrepPage() {
                       className="form-input"
                     />
                   </label>
-                  <p className="text-xs opacity-70">Default: {UI_LIMITS.defaultQuestionCount} questions. Maximum: {UI_LIMITS.maxQuestionCount} questions.</p>
+                  <p className="text-xs opacity-70">
+                    Default: {Math.min(UI_LIMITS.defaultQuestionCount, availableCount)} questions. Maximum: {Math.min(UI_LIMITS.maxQuestionCount, availableCount)} available based on current filters.
+                  </p>
                 </section>
               </div>
               
@@ -354,6 +442,11 @@ export default function MockExamPrepPage() {
                   />
                   Show the correct answer instantly after each question
                 </label>
+              </section>
+
+              <section className="flex flex-col gap-4">
+                <h2 className="text-2xl font-light">Exam Years</h2>
+                {isStartingExam ? <SkeletonLoader lines={2} /> : renderYearsFieldset()}
               </section>
 
               <section className="flex flex-col gap-4">

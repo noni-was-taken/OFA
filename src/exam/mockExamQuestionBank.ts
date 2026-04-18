@@ -455,10 +455,12 @@ const parsedVaultQuestions: ParsedVaultQuestion[] = Object.entries(vaultMarkdown
 
 const buildQuestionPool = (settings: MockExamSettings): MockExamQuestion[] => {
   const selectedTopics = new Set(settings.selectedTopics);
+  const selectedYears = new Set(settings.selectedYears);
 
   return parsedVaultQuestions
     .filter((question) => question.examType === settings.examType)
     .filter((question) => selectedTopics.has(question.subjectTopic))
+    .filter((question) => selectedYears.has(question.sourceYear))
     .filter((question) => !requiresVisualContent(question.questionText, question.optionLines, question.questionImagePath, question.containsMarkdownTable, question.tableMarkdown))
     .map<MockExamQuestion | null>((question, index) => {
       const options = extractOptionsFromLines(question.optionLines);
@@ -525,3 +527,10 @@ export const buildMockExamSession = (settings: MockExamSettings): MockExamSessio
 export const getEligibleQuestionCount = (settings: MockExamSettings): number => buildQuestionPool(settings).length;
 
 export const getAllAvailableTopics = (): string[] => [...allTopics];
+
+export const getAllAvailableYears = (): string[] => {
+  const years = new Set(
+    parsedVaultQuestions.map((q) => q.sourceYear).filter((year) => year !== "Unknown")
+  );
+  return Array.from(years).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+};

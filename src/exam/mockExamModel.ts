@@ -41,6 +41,7 @@ export type MockExamSettings = {
   questionCount: number;
   instantAnswers: boolean;
   selectedTopics: string[];
+  selectedYears: string[];
 };
 
 export type MockExamOption = {
@@ -119,7 +120,7 @@ export type MockExamResult = {
 
 const SESSION_STORAGE_KEY = "ofa.mockExam.currentSession";
 const RESULT_STORAGE_KEY = "ofa.mockExam.latestResult";
-const SESSION_SCHEMA_VERSION = 3;
+const SESSION_SCHEMA_VERSION = 4;
 
 const extractYearFromText = (value: string | null | undefined): string | null => {
   if (!value) {
@@ -205,6 +206,7 @@ const isMockExamSession = (value: unknown): value is MockExamSession => {
     typeof session.currentQuestionIndex === "number" &&
     typeof session.hintsUsed === "number" &&
     Boolean(session.settings) &&
+    Array.isArray(session.settings?.selectedYears) &&
     Array.isArray(session.questions) &&
     Boolean(session.answers) &&
     typeof session.answers === "object"
